@@ -2,6 +2,7 @@ import os,sys
 import argparse
 import subprocess
 import itertools
+import random
 
 import assign_functions
 
@@ -12,8 +13,8 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 io = parser.add_argument_group('Input/output')
 options = parser.add_argument_group('Method options')
 
+io.add_argument("--inputs_num", dest="inputs_num", help="Numbers of samples to be assigned", default="10")
 io.add_argument("--cluster_file", help="Cluster label file")
-io.add_argument("--input_file", help="Fasta file to assign")
 io.add_argument("--assembly_file", help="Tab separated file with sample name and assembly location on each line")
 io.add_argument("-o","--output", dest="output_prefix", help="Output prefix", default="clusters")
 options.add_argument("-m", "--mash", dest="mash_exec", help="Location of mash executable",default='mash')
@@ -42,15 +43,15 @@ if int(args.sketch_size) < int(args.min_sketch_size) or int(args.sketch_size) > 
     sys.stderr.write(str(args.sketch_size) + " is an invalid value\n")
     sys.exit(1)
 
-# Check input files exist
-if not os.path.isfile(str(args.input_file)):
-    if args.input_file == None:
-        sys.stderr.write("No input file entered\n")
-        sys.exit(1)
-    else:
-        sys.stderr.write(str(args.input_file) + " does not exist\n")
-        sys.exit(1)
+if int(args.inputs_num) < 0 or int(args.inputs_num) > 800:
+    sys.stderr.write(str(args.inputs_num) + " is an invalid value\n")
+    sys.exit(1)
 
+if not args.inputs_num.isdigit:
+    sys.stderr.write(str(args.inputs_num) + " is an invalid value\n")
+    sys.exit(1)
+
+# Check input files exist
 if not os.path.isfile(str(args.cluster_file)):
     if args.cluster_file == None:
         sys.stderr.write("No cluster file entered\n")
@@ -71,9 +72,21 @@ inputs = assign_functions.input_reader(args.cluster_file, args.assembly_file)
 
 assign_functions.reference_creator(inputs[1], args.kmer_size, args.sketch_size, args.mash_exec)
 
-assign_functions.sample_skectching (args.mash_exec, args.kmer_size, args.sketch_size, args.input_file)
+items = inputs[1]
+k = int(args.inputs_num)
+random_input = items[0:k]
 
-cluster_output = assign_functions.cluster_identification(args.mash_exec, inputs[0] , inputs[2])
-print("Minimum distance is " + str(cluster_output[0]))
-print("SampleID is " + str(cluster_output[1]))
-print("Cluster is " + str(cluster_output[2]))
+for i in range(k, len(items)):
+    j = random.randrange(0, i)
+    if j < k:
+        random_input[j] = items[i]
+
+for random_sample in random_input:
+    assign_functions.sample_skectching (args.mash_exec, args.kmer_size, args.sketch_size, random_sample)
+    cluster_output = assign_functions.cluster_identification(args.mash_exec, inputs[0] , inputs[2], random_input)
+    print("Assigned Cluster is " + str(cluster_output[2]))
+    print("Actual Cluster is " + str(inputs[2][cluster_output[1]]))
+    if int(cluster_output[2]) == int(inputs[2][cluster_output[1]]):
+        print('\x1b[6;30;42m' + 'Correct' + '\x1b[0m')
+    else:
+        print('\033[91m' + 'Incorrect' + '\033[00m')
