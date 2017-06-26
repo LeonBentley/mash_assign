@@ -27,7 +27,7 @@ def input_reader(cluster_file, assembly_file):
             (sampleID, file_name) = line.split(separator)#splits into 2 variables
             file_names.append(file_name)#adds address/location
             location_dict.update({file_name:sampleID})#adds new key and item
-    
+
     return location_dict, file_names, clusters
     
 def reference_creator(file_names, kmer_size, sketch_size, mash_exec):
@@ -62,34 +62,56 @@ def reference_creator(file_names, kmer_size, sketch_size, mash_exec):
         else:
             os.rename("reference0.msh", "reference.msh")#if there are less clusters than the size of one chunk, only one file is made, named without the number
 
-def cluster_identification (mash_exec, location_dict , clusters, random_testing = None):
+def cluster_identification (mash_exec, location_dict , clusters, msh_file_name, random_testing = None, output_count = 10):
 
     min_dist = 1
-    p = subprocess.Popen([str(mash_exec) + ' dist reference.msh input.msh'], stdout=subprocess.PIPE, shell=True)
+    min_clusters = []
+    min_IDs = []
+    min_dists = []
+    p = subprocess.Popen([str(mash_exec) + ' dist reference.msh ' + str(msh_file_name) + ' | sort -gk3'], stdout=subprocess.PIPE, shell=True)
     for line in iter(p.stdout.readline, ''):
         line = line.decode('utf-8')
         line = line.rstrip()
         if random_testing != None:
+            x = 0
             if line != '':
                 (name1, name2, dist, p, matches) = line.split(separator)
-                if float(dist) < min_dist and name1 not in random_testing:
+                name1 = name1.replace('/lustre/scratch118/infgen/team81/jl11/bacterial_association/', '')1
+                if name1 not in random_testing:
                     min_dist = float(dist)
                     location_file = name1
+                    break
             else:
                 break
         else:
             if line != '':
                 (name1, name2, dist, p, matches) = line.split(separator)
-                if float(dist) < min_dist:
-                    min_dist = float(dist)
-                    location_file = name1
+                name1 = name1.replace('/lustre/scratch118/infgen/team81/jl11/bacterial_association/', '')
+                min_dists.append(float(dist))
+                location_file = name1
+                min_IDs.append(location_dict[location_file])
+                min_clusters.append(clusters[location_dict[location_file]])
             else:
                 break
-    return(min_dist, location_dict[location_file], clusters[(location_dict[location_file])])
+            x = 0
+            count = 0
+            value = min_dists[0]
+            for x in range(1, len(min_dists)):
+                if value != min_dists[x] and count < int(output_count):
+                    value = min_dists[x]
+                    count = count + 1
+                elif count >= int(output_count):
+                    break
 
-def sample_skectching(mash_exec, kmer_size, sketch_size, input_file):
-    mash_command = str(mash_exec) + " sketch -k " + kmer_size + " -s " + sketch_size + " -o input " + str(input_file)
-    retcode = subprocess.call(mash_command, shell=True)#makes sketch for new sample
-    if retcode != 0:#checks for code failure
-        sys.stderr.write("Mash sketch failed with signal " + str(retcode) + "\n")
-        sys.exit(1)
+    return(min_dist, location_dict[location_file], clusters[(location_dict[location_file])], min_dists[0:x - 1], min_IDs[0:x - 1], min_clusters[0:x - 1])
+
+def sample_sketching(mash_exec, kmer_size, sketch_size, input_file):
+    (split, apart) = input_file.split(".")
+    stitch = split + '.msh'
+    if not os.path.isfile(stitch):
+        mash_command = str(mash_exec) + " sketch -k " + kmer_size + " -s " + sketch_size + " -o input " + str(input_file)
+        retcode = subprocess.call(mash_command, shell=True)#makes sketch for new sample
+        if retcode != 0:#checks for code failure
+            sys.stderr.write("Mash sketch failed with signal " + str(retcode) + "\n")
+            sys.exit(1)
+    return(stitch)

@@ -16,6 +16,7 @@ io.add_argument("--cluster_file", help="Cluster label file")
 io.add_argument("--input_file", help="Fasta file to assign")
 io.add_argument("--assembly_file", help="Tab separated file with sample name and assembly location on each line")
 io.add_argument("-o","--output", dest="output_prefix", help="Output prefix", default="clusters")
+io.add_argument("--output_count", dest="output_count", help="Numbers of samples outputted", default="10")
 options.add_argument("-m", "--mash", dest="mash_exec", help="Location of mash executable",default='mash')
 options.add_argument("--kmer_size", dest="kmer_size", help="K-mer size for mash sketches", default="21")
 options.add_argument("--sketch_size", dest="sketch_size", help="Size of mash sketch", default="1000")
@@ -73,7 +74,8 @@ assign_functions.reference_creator(inputs[1], args.kmer_size, args.sketch_size, 
 
 assign_functions.sample_skectching (args.mash_exec, args.kmer_size, args.sketch_size, args.input_file)
 
-cluster_output = assign_functions.cluster_identification(args.mash_exec, inputs[0] , inputs[2])
-print("Minimum distance is " + str(cluster_output[0]))
-print("SampleID is " + str(cluster_output[1]))
-print("Cluster is " + str(cluster_output[2]))
+cluster_output = assign_functions.cluster_identification(args.mash_exec, inputs[0] , inputs[2], args.input_file, None, args.output_count)
+for y in range(0, len(cluster_output[3])):
+    output_list = [str(cluster_output[4][y]), str(cluster_output[3][y]), str(cluster_output[5][y])]
+    output_list = '\t'.join(output_list)
+    print(output_list + '\n')
