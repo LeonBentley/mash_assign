@@ -72,10 +72,10 @@ inputs = assign_functions.input_reader(args.cluster_file, args.assembly_file)
 
 assign_functions.reference_creator(inputs[1], args.kmer_size, args.sketch_size, args.mash_exec)
 
-assign_functions.sample_skectching (args.mash_exec, args.kmer_size, args.sketch_size, args.input_file)
+assign_functions.sample_sketching (args.mash_exec, args.kmer_size, args.sketch_size, args.input_file)
 
 cluster_output = assign_functions.cluster_identification(args.mash_exec, inputs[0] , inputs[2], args.input_file, None, args.output_count)
-for y in range(0, len(cluster_output[3])):
-    output_list = [str(cluster_output[4][y]), str(cluster_output[3][y]), str(cluster_output[5][y])]
+for y in range(0, len(cluster_output[0])):
+    output_list = [str(cluster_output[1][y]), str(cluster_output[0][y]), str(cluster_output[2][y])]
     output_list = '\t'.join(output_list)
-    print(output_list + '\n')
+    print(output_list)

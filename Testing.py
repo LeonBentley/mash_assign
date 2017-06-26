@@ -88,14 +88,13 @@ for count in range(1, int(args.repeats), 1):
 
 
     accuracycount = 0
-    print(random_input)
     for random_sample in random_input:
-        assign_functions.sample_skectching (args.mash_exec, args.kmer_size, args.sketch_size, random_sample)
+        assign_functions.sample_sketching (args.mash_exec, args.kmer_size, args.sketch_size, random_sample)
         cluster_output = assign_functions.cluster_identification(args.mash_exec, inputs[0] , inputs[2], random_sample, random_input)
 
-        print("Assigned Cluster is " + str(cluster_output[2]))
+        print("Assigned Cluster is " + str(cluster_output[2][0]))
         print("Actual Cluster is " + str(inputs[2][inputs[0][random_sample]]))
-        if int(cluster_output[2]) == int(inputs[2][cluster_output[1]]):
+        if int(cluster_output[2][0]) == int(inputs[2][inputs[0][random_sample]]):
             print('\x1b[6;30;42m' + 'Correct' + '\x1b[0m')
             accuracycount = accuracycount + 1
 
@@ -104,9 +103,8 @@ for count in range(1, int(args.repeats), 1):
 
     accuracy = accuracycount/float(k)
     print(accuracy)
-    accuracy_list.append(accuracy)
-    with open(str(args.accuracies_file), "a+") as file:
-        file.write(str(accuracy) + ', ')
+    accuracy_list.append(str(accuracy))
 
-
+with open(str(args.accuracies_file), "w+") as file:
+        file.write(','.join(accuracy_list) + '\n')
 print(accuracy_list)

@@ -62,48 +62,32 @@ def reference_creator(file_names, kmer_size, sketch_size, mash_exec):
         else:
             os.rename("reference0.msh", "reference.msh")#if there are less clusters than the size of one chunk, only one file is made, named without the number
 
-def cluster_identification (mash_exec, location_dict , clusters, msh_file_name, random_testing = None, output_count = 10):
+def cluster_identification (mash_exec, location_dict, clusters, msh_file_name, random_testing = None, output_count = 1):
 
     min_dist = 1
     min_clusters = []
     min_IDs = []
     min_dists = []
+    count = 0
     p = subprocess.Popen([str(mash_exec) + ' dist reference.msh ' + str(msh_file_name) + ' | sort -gk3'], stdout=subprocess.PIPE, shell=True)
     for line in iter(p.stdout.readline, ''):
         line = line.decode('utf-8')
         line = line.rstrip()
-        if random_testing != None:
-            x = 0
-            if line != '':
-                (name1, name2, dist, p, matches) = line.split(separator)
-                name1 = name1.replace('/lustre/scratch118/infgen/team81/jl11/bacterial_association/', '')1
-                if name1 not in random_testing:
-                    min_dist = float(dist)
-                    location_file = name1
-                    break
-            else:
-                break
-        else:
-            if line != '':
-                (name1, name2, dist, p, matches) = line.split(separator)
-                name1 = name1.replace('/lustre/scratch118/infgen/team81/jl11/bacterial_association/', '')
-                min_dists.append(float(dist))
-                location_file = name1
-                min_IDs.append(location_dict[location_file])
-                min_clusters.append(clusters[location_dict[location_file]])
-            else:
-                break
-            x = 0
-            count = 0
-            value = min_dists[0]
-            for x in range(1, len(min_dists)):
-                if value != min_dists[x] and count < int(output_count):
-                    value = min_dists[x]
-                    count = count + 1
-                elif count >= int(output_count):
-                    break
 
-    return(min_dist, location_dict[location_file], clusters[(location_dict[location_file])], min_dists[0:x - 1], min_IDs[0:x - 1], min_clusters[0:x - 1])
+        if line != '':
+            (name1, name2, dist, p, matches) = line.split(separator)
+            if random_testing == None or name1 not in random_testing:
+                if count < int(output_count):
+                    min_dists.append(float(dist))
+                    min_IDs.append(location_dict[name1])
+                    min_clusters.append(clusters[location_dict[name1]])
+                    count += 1
+                else:
+                    break
+        else:
+            break
+
+    return(min_dists, min_IDs, min_clusters)
 
 def sample_sketching(mash_exec, kmer_size, sketch_size, input_file):
     (split, apart) = input_file.split(".")
