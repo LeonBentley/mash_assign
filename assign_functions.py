@@ -2,6 +2,7 @@ import os,sys
 import argparse
 import subprocess
 import itertools
+import operator
 
 separator = "\t"
 
@@ -64,28 +65,40 @@ def reference_creator(file_names, kmer_size, sketch_size, mash_exec):
 
 def cluster_identification (mash_exec, location_dict, clusters, msh_file_name, random_testing = None, output_count = 1):
 
-    min_dist = 1
+    distances = {}
     min_clusters = []
     min_IDs = []
     min_dists = []
     count = 0
-    p = subprocess.Popen([str(mash_exec) + ' dist reference.msh ' + str(msh_file_name) + ' | sort -gk3'], stdout=subprocess.PIPE, shell=True)
+    random_IDs = []
+
+    if random_testing != None:
+        for random_sample in random_testing:
+            random_IDs.append(location_dict[random_sample])
+
+    p = subprocess.Popen([str(mash_exec) + ' dist reference.msh ' + str(msh_file_name)], stdout=subprocess.PIPE, shell=True)
     for line in iter(p.stdout.readline, ''):
         line = line.decode('utf-8')
         line = line.rstrip()
 
         if line != '':
             (name1, name2, dist, p, matches) = line.split(separator)
-            if random_testing == None or name1 not in random_testing:
-                if count < int(output_count):
-                    min_dists.append(float(dist))
-                    min_IDs.append(location_dict[name1])
-                    min_clusters.append(clusters[location_dict[name1]])
-                    count += 1
-                else:
-                    break
+            distances.update({location_dict[name1]:dist})
+
         else:
             break
+
+    sorted_distances = sorted(distances.items(), key = operator.itemgetter(1))
+
+    for x in range(0, len(sorted_distances)):
+        if random_testing == None or sorted_distances[x][0] not in random_IDs:
+            if count < int(output_count):
+                min_dists.append(sorted_distances[x][1])
+                min_IDs.append(sorted_distances[x][0])
+                min_clusters.append(clusters[sorted_distances[x][0]])
+                count += 1
+            else:
+                break
 
     return(min_dists, min_IDs, min_clusters)
 
