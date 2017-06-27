@@ -1,8 +1,10 @@
+#Imports relevant stuff
 import os,sys
 import argparse
 import subprocess
 import itertools
 
+#Imports functions from a local script file
 import assign_functions
 
 separator = "\t"
@@ -75,6 +77,8 @@ assign_functions.reference_creator(inputs[1], args.kmer_size, args.sketch_size, 
 assign_functions.sample_sketching (args.mash_exec, args.kmer_size, args.sketch_size, args.input_file)
 
 cluster_output = assign_functions.cluster_identification(args.mash_exec, inputs[0] , inputs[2], args.input_file, None, args.output_count)
+
+#Formats the output (purely aesthetic) and then prints
 for y in range(0, len(cluster_output[0])):
     output_list = [str(cluster_output[1][y]), str(cluster_output[0][y]), str(cluster_output[2][y])]
     output_list = '\t'.join(output_list)

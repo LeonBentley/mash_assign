@@ -1,9 +1,11 @@
+#Imports relevant stuff
 import os,sys
 import argparse
 import subprocess
 import itertools
 import random
 
+#Imports functions from a local script file
 import assign_functions
 
 separator = "\t"
@@ -16,8 +18,7 @@ options = parser.add_argument_group('Method options')
 io.add_argument("--inputs_num", dest="inputs_num", help="Numbers of samples to be assigned", default="10")
 io.add_argument("--cluster_file", help="Cluster label file")
 io.add_argument("--assembly_file", help="Tab separated file with sample name and assembly location on each line")
-io.add_argument("-o","--output", dest="output_prefix", help="Output prefix", default="clusters")
-io.add_argument("--accuracies_file", dest="accuracies_file", help="File which accuracy for each set of samples will be stored in", default="accuracies.txt")
+io.add_argument("-o","--output", dest="output_file", help="Output file", default="accuracies.txt")
 options.add_argument("--repeats", dest="repeats", help="Numbers of times whole test should be run",default='10')
 options.add_argument("-m", "--mash", dest="mash_exec", help="Location of mash executable",default='mash')
 options.add_argument("--kmer_size", dest="kmer_size", help="K-mer size for mash sketches", default="21")
@@ -70,13 +71,14 @@ if not os.path.isfile(str(args.assembly_file)):
         sys.stderr.write(str(args.assembly_file) + " does not exist\n")
         sys.exit(1)
 
-inputs = assign_functions.input_reader(args.cluster_file, args.assembly_file)
+inputs = assign_functions.input_reader(args.cluster_file, args.assembly_file)#Runs the function with provided inputs and makes a list of its outputs
 
-assign_functions.reference_creator(inputs[1], args.kmer_size, args.sketch_size, args.mash_exec)
+assign_functions.reference_creator(inputs[1], args.kmer_size, args.sketch_size, args.mash_exec)#Runs the function and provides inputs
 
-accuracy_list = []
+accuracy_list = []#Creates empty list
 
-for count in range(1, int(args.repeats), 1):
+for count in range(0, int(args.repeats)):
+    #Takes 'k' random files from provided set
     items = inputs[1]
     k = int(args.inputs_num)
     random_input = items[0:k]
@@ -86,12 +88,13 @@ for count in range(1, int(args.repeats), 1):
         if j < k:
             random_input[j] = items[i]
 
+    accuracycount = 0#Sets variable as 0
 
-    accuracycount = 0
-    for random_sample in random_input:
-        assign_functions.sample_sketching (args.mash_exec, args.kmer_size, args.sketch_size, random_sample)
-        cluster_output = assign_functions.cluster_identification(args.mash_exec, inputs[0] , inputs[2], random_sample, random_input)
+    for random_sample in random_input:#Takes first value in list and names in randon_sample
+        assign_functions.sample_sketching (args.mash_exec, args.kmer_size, args.sketch_size, random_sample)#Runs the function and provides inputs
+        cluster_output = assign_functions.cluster_identification(args.mash_exec, inputs[0] , inputs[2], random_sample, random_input)#Runs the function with provided inputs and makes a list of its outputs
 
+        #Prints outputs with coloured text to make manual testing easier
         print("Assigned Cluster is " + str(cluster_output[2][0]))
         print("Actual Cluster is " + str(inputs[2][inputs[0][random_sample]]))
         if int(cluster_output[2][0]) == int(inputs[2][inputs[0][random_sample]]):
@@ -101,10 +104,14 @@ for count in range(1, int(args.repeats), 1):
         else:
             print('\033[6;30;91m' + 'Incorrect' + '\033[00m')
 
+        print(count + '/' + (inputs_num))
+
+    #Calculates and prints accuracy, appends accuracy to list
     accuracy = accuracycount/float(k)
     print(accuracy)
     accuracy_list.append(str(accuracy))
 
+#Writes list to file and prints
 with open(str(args.accuracies_file), "w+") as file:
-        file.write(','.join(accuracy_list) + '\n')
+        file.write(','.join(accuracy_list) + '\n')#Joins different values in list with seperator ','
 print(accuracy_list)

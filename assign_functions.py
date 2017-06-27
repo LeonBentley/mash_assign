@@ -65,34 +65,37 @@ def reference_creator(file_names, kmer_size, sketch_size, mash_exec):
 
 def cluster_identification (mash_exec, location_dict, clusters, msh_file_name, random_testing = None, output_count = 1):
 
+    #Establishes variables, lists and dictonary
     distances = {}
     min_clusters = []
     min_IDs = []
     min_dists = []
-    count = 0
     random_IDs = []
 
+    #Uses list of random files to make a random list of IDs
     if random_testing != None:
         for random_sample in random_testing:
             random_IDs.append(location_dict[random_sample])
 
-    p = subprocess.Popen([str(mash_exec) + ' dist reference.msh ' + str(msh_file_name)], stdout=subprocess.PIPE, shell=True)
-    for line in iter(p.stdout.readline, ''):
-        line = line.decode('utf-8')
-        line = line.rstrip()
+    p = subprocess.Popen([str(mash_exec) + ' dist reference.msh ' + str(msh_file_name)], stdout=subprocess.PIPE, shell=True)#Creates command to calculate distance between two files
+    for line in iter(p.stdout.readline, ''):#Reads all lines in output of command above
+        line = line.decode('utf-8')#Decodes line to specific encoding
+        line = line.rstrip()#Removes \n from end of line
 
         if line != '':
-            (name1, name2, dist, p, matches) = line.split(separator)
-            distances.update({location_dict[name1]:dist})
+            (name1, name2, dist, p, matches) = line.split(separator)#Splits line at tabs, into 5 variables
+            distances.update({location_dict[name1]:dist})#Adds two newly created variables to dictionary
 
         else:
             break
 
-    sorted_distances = sorted(distances.items(), key = operator.itemgetter(1))
+    sorted_distances = sorted(distances.items(), key = operator.itemgetter(1))#Makes list of dictionary contents (tuples) ordered by value
 
+    #Adds contents derived from list of tuples to lists to be used in final output
+    count = 0
     for x in range(0, len(sorted_distances)):
         if random_testing == None or sorted_distances[x][0] not in random_IDs:
-            if count < int(output_count):
+            if count < int(output_count):#Determines when loop ends
                 min_dists.append(sorted_distances[x][1])
                 min_IDs.append(sorted_distances[x][0])
                 min_clusters.append(clusters[sorted_distances[x][0]])
@@ -100,7 +103,7 @@ def cluster_identification (mash_exec, location_dict, clusters, msh_file_name, r
             else:
                 break
 
-    return(min_dists, min_IDs, min_clusters)
+    return(min_dists, min_IDs, min_clusters)#outputs relevant lists
 
 def sample_sketching(mash_exec, kmer_size, sketch_size, input_file):
     (split, apart) = input_file.split(".")
@@ -111,4 +114,4 @@ def sample_sketching(mash_exec, kmer_size, sketch_size, input_file):
         if retcode != 0:#checks for code failure
             sys.stderr.write("Mash sketch failed with signal " + str(retcode) + "\n")
             sys.exit(1)
-    return(stitch)
+    return(stitch)#Outputs mash file of sample to be assigne
