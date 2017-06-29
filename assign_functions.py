@@ -114,4 +114,4 @@ def sample_sketching(mash_exec, kmer_size, sketch_size, input_file):
         if retcode != 0:#checks for code failure
             sys.stderr.write("Mash sketch failed with signal " + str(retcode) + "\n")
             sys.exit(1)
-    return(stitch)#Outputs mash file of sample to be assigne
+    return(stitch)#Outputs mash file of sample to be assigned
