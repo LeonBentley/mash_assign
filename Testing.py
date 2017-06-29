@@ -23,10 +23,6 @@ options.add_argument("--repeats", dest="repeats", help="Numbers of times whole t
 options.add_argument("-m", "--mash", dest="mash_exec", help="Location of mash executable",default='mash')
 options.add_argument("--kmer_size", dest="kmer_size", help="K-mer size for mash sketches", default="21")
 options.add_argument("--sketch_size", dest="sketch_size", help="Size of mash sketch", default="1000")
-options.add_argument("--max_kmer_size", dest="max_kmer_size", help="Max K-mer size for mash sketches", default="1000")
-options.add_argument("--min_kmer_size", dest="min_kmer_size", help="Minimum K-mer size for mash sketches", default="3")
-options.add_argument("--max_sketch_size", dest="max_sketch_size", help="Max sketch size for mash sketches", default="100000")
-options.add_argument("--min_sketch_size", dest="min_sketch_size", help="Minimum sketch size for mash sketches", default="500")
 args = parser.parse_args()
 
 #Checks arguments are intergers in sensible range
@@ -34,7 +30,7 @@ if not args.kmer_size.isdigit:
     sys.stderr.write(str(args.kmer_size) + " is an invalid value\n")
     sys.exit(1)
 
-if int(args.kmer_size) < int(args.min_kmer_size) or int(args.kmer_size) > int(args.max_kmer_size):
+if int(args.kmer_size) < 3 or int(args.kmer_size) > 1000:
     sys.stderr.write(str(args.kmer_size) + " is an invalid value\n")
     sys.exit(1)
 
@@ -42,7 +38,7 @@ if not args.sketch_size.isdigit:
     sys.stderr.write(str(args.sketch_size) + " is an invalid value\n")
     sys.exit(1)
 
-if int(args.sketch_size) < int(args.min_sketch_size) or int(args.sketch_size) > int(args.max_sketch_size):
+if int(args.sketch_size) < 500 or int(args.sketch_size) > 100000:
     sys.stderr.write(str(args.sketch_size) + " is an invalid value\n")
     sys.exit(1)
 
