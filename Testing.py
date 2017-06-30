@@ -100,7 +100,7 @@ for count in range(0, int(args.repeats)):
         else:
             print('\033[6;30;91m' + 'Incorrect' + '\033[00m')
 
-        print(count + '/' + (inputs_num))
+    print(str(count+1) + '/' + (args.inputs_num))
 
     #Calculates and prints accuracy, appends accuracy to list
     accuracy = accuracycount/float(k)
